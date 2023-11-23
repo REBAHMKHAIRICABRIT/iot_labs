@@ -91,7 +91,7 @@ int timeUs =5000;
 	vTaskDelete(NULL);
 }
 void MyFunction_cb() {
-
+	dac_output_enable(DAC_CHANNEL_1);
 dac_output_voltage(DAC_CHANNEL_1, 250);
 
 }
