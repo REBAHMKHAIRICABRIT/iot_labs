@@ -29,7 +29,7 @@
 #include "driver/gpio.h"
 #include "driver/dac.h"
 
-
+#define TRIANGLE_AMPLITUDE 255
 /* 
 --------------------
 Digital to Analog Converter (DAC)
@@ -46,14 +46,16 @@ https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system
 
 */
 
-
+static const float timeUs = 10000;
 /**
  * @brief Starting point function
  * 
  */
+
 void MyFunction_cb();
+
 void app_main(void) {
-int timeUs =5000;
+
 	/**************************************************/
 	/* Configure DAC (Digital to Analog Converter)    */
 
@@ -90,8 +92,24 @@ int timeUs =5000;
 	/* to ensure its exit is clean */
 	vTaskDelete(NULL);
 }
-void MyFunction_cb() {
-	dac_output_enable(DAC_CHANNEL_1);
-dac_output_voltage(DAC_CHANNEL_1, 250);
 
+void MyFunction_cb(void *args){
+	static uint8_t triangleValue = 0;
+    static bool increasing = true;
+
+    // Generate a triangular waveform
+    if (increasing) {
+        triangleValue++;
+        if (triangleValue == TRIANGLE_AMPLITUDE) {
+            increasing = false;
+        }
+    } else {
+        triangleValue--;
+        if (triangleValue == 0) {
+            increasing = true;
+        }
+    }
+
+    // Set the DAC output voltage
+    dac_output_voltage(DAC_CHANNEL_1, triangleValue);
 }
