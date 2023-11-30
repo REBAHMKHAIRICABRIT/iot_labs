@@ -9,83 +9,91 @@
  * @file main.c
  * @author Fabrice Muller
  * @date 02 Nov. 2021
- * @brief File containing the lab2 of Part 4.
+ * @brief File containing the lab3 of Part 4.
  *
  * @see https://github.com/fmuller-pns/esp32-vscode-project-template
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "esp_log.h"
+
+#include "esp_intr_alloc.h"
+
+#include "freertos/FreeRTOSConfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "driver/ledc.h"
-#include "esp_err.h"
 
-#include "soc/ledc_reg.h"
+#include "driver/uart.h"
+#include "driver/gpio.h"
 
+static const char *TAG = "MAIN"; 
 
-/*
-Documentation:
-https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/ledc.html
+// GPIO18
+#define TXD_PIN ??
+// GPIO23
+#define RXD_PIN ??
+// Not Connected
+#define RTS_PIN (UART_PIN_NO_CHANGE)
+// Not Connected
+#define CTS_PIN (UART_PIN_NO_CHANGE)
 
-*/
+// Port number : 2
+#define UART_PORT_NUM      ??
+
+// Rate : 115200
+#define UART_BAUD_RATE     ??
+
+#define TASK_STACK_SIZE    2048
+
+#define BUF_SIZE (1024)
+static char data[BUF_SIZE];
 
 /**
  * @brief Starting point function
  * 
  */
+
 void app_main(void) {
 
-  /* 
-   * LEDC Timer configuration
-   * Timer 0, Low speed mode, Auto clk, Résolution 10bits, Frequency 5 KHz
-   */
-  ledc_timer_config_t timer = {
-      .speed_mode = LEDC_LOW_SPEED_MODE,
-      .duty_resolution = LEDC_TIMER_10_BIT,
-      .timer_num = LEDC_TIMER_0,
-      .freq_hz = 5000,
-      .clk_cfg = LEDC_AUTO_CLK};
+	printf("Echo UART\n");
+	
+    /* Configure parameters of the UART driver,
+     * communication pins and install the driver.
+     *
+     * Configuration: 115000 BAUDS, 8 BITS, No Parity, 1 STOP BIT, No Flow Control, APB CLK
+     */
+    uart_config_t uart_config = {
+        .baud_rate = UART_BAUD_RATE,   
+        .data_bits = ??,
+        .parity    = ??,
+        .stop_bits = ??,
+        .flow_ctrl = ??,
+        .source_clk = ??,
+    };
 
-  ledc_timer_config(&timer);
+    ESP_ERROR_CHECK(uart_driver_install(UART_PORT_NUM, BUF_SIZE * 2, 0, 0, NULL, 0));
+    ESP_ERROR_CHECK(uart_param_config(UART_PORT_NUM, &uart_config));
+    ESP_ERROR_CHECK(uart_set_pin(UART_PORT_NUM, TXD_PIN, RXD_PIN, RTS_PIN, CTS_PIN));
 
-  /*
-   * Channel configuration
-   * Timer 0, Channel 0, GPIO21 pin, Low speed mode, duty=0
-   */
-  ledc_channel_config_t channel = {
-      .gpio_num = 21,
-      .speed_mode = LEDC_LOW_SPEED_MODE,
-      .channel = LEDC_CHANNEL_0,  
-      .timer_sel = LEDC_TIMER_0,
-      .duty = 0,    
-      .hpoint = 0
-      };
+     char text[100];
+	for (int iter=0; iter<10; iter++) {
 
-  ledc_channel_config(&channel);
+         sprintf(text, "(iter = %d) => HELLO, I'M TESTING UART !\r\n", iter);
 
-  /* Fade installation */
-  esp_err_t result = ledc_fade_func_install(0);
-  if (result != ESP_OK) {
-    printf("Error installing fade: %04x\n", result);  
-    return;
-  }
+        // Write data back to the UART
+ 		int length = uart_write_bytes(UART_PORT_NUM, (const char *) text, strlen(text));
+        if (length == -1)
+            ESP_LOGE(TAG, "Error when writing in UART.");
 
-  /* First scenario */
-  printf("First scenario\n");
+		vTaskDelay(pdMS_TO_TICKS(1000));
 
-  for (int i = 0; i < 1024; i++) {
-    ledc_set_duty_and_update(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0,i,0);
-    vTaskDelay(pdMS_TO_TICKS(10));
-  }
+		// Read data from the UART
+        length = uart_read_bytes(UART_PORT_NUM, data, BUF_SIZE, 20 / portTICK_RATE_MS);
+		if (length != 0)
+			printf("Read data: %s\n", data);
+	}
 
-  /* Second scenario */
-  printf("Second scenario\n");
-
-  while(true) {
-    printf("Action 1\n");
-    ledc_set_fade_time_and_start(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0, 0, 2000, LEDC_FADE_WAIT_DONE);
-    printf("Action 2\n");
-    ledc_set_fade_time_and_start(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0, 1024, 5000, LEDC_FADE_WAIT_DONE);
-  }
-
+	vTaskDelete(NULL);
 }
