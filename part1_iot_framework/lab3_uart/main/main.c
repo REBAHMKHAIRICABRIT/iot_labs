@@ -31,19 +31,18 @@
 static const char *TAG = "MAIN"; 
 
 // GPIO18
-#define TXD_PIN ??
+#define TXD_PIN 18
 // GPIO23
-#define RXD_PIN ??
+#define RXD_PIN 23
 // Not Connected
 #define RTS_PIN (UART_PIN_NO_CHANGE)
 // Not Connected
 #define CTS_PIN (UART_PIN_NO_CHANGE)
 
 // Port number : 2
-#define UART_PORT_NUM      ??
-
+#define UART_PORT_NUM      2
 // Rate : 115200
-#define UART_BAUD_RATE     ??
+#define UART_BAUD_RATE     115200
 
 #define TASK_STACK_SIZE    2048
 
@@ -66,11 +65,11 @@ void app_main(void) {
      */
     uart_config_t uart_config = {
         .baud_rate = UART_BAUD_RATE,   
-        .data_bits = ??,
-        .parity    = ??,
-        .stop_bits = ??,
-        .flow_ctrl = ??,
-        .source_clk = ??,
+        .data_bits = UART_DATA_8_BITS,
+        .parity    = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .source_clk = UART_SCLK_APB,
     };
 
     ESP_ERROR_CHECK(uart_driver_install(UART_PORT_NUM, BUF_SIZE * 2, 0, 0, NULL, 0));
