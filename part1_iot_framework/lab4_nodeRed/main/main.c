@@ -47,6 +47,11 @@ static const char *TAG = "MAIN";
 #define DEFAULT_VREF    1100
 
 
+const adc_unit_t unit = ADC_UNIT_1;
+const adc_channel_t channel = ADC1_CHANNEL_1;   
+const adc_bits_width_t width = ADC_WIDTH_BIT_10;
+const adc_atten_t atten = ADC_ATTEN_DB_11;
+
 
 
 
@@ -72,7 +77,7 @@ static char data[BUF_SIZE];
 
 /* The tasks */
 void vUpdateLedTask(void *pvParameters);
-
+void ScanTask(void *pvParameters);
 
 /* LED constants */
 static const char * WHITE_LED_CMD = "WHITE";
@@ -108,10 +113,12 @@ void app_main(void) {
     /* Configure ADC : ADC1, Channel 1, 10 bits, Attenuation 11dB */
 
 
+	adc1_config_width(width);	
+   	adc1_config_channel_atten(channel, atten);
 
-
-
-
+    adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
+    esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, width, DEFAULT_VREF, adc_chars);
+   
     /* 
     * LEDC Timer configuration
     * Timer 0, Low speed mode, Auto clk, Résolution 10bits, Frequency 5 KHz
@@ -161,13 +168,40 @@ void app_main(void) {
     /* Create Tasks */
 
 
-
-
+      xTaskCreatePinnedToCore( ScanTask,"ScanTask", 4096, NULL, 5 , NULL,CORE_0);  
+	  xTaskCreatePinnedToCore(vUpdateLedTask,	"UpdateLed", 4096, NULL, 5 , NULL, CORE_1);
 
     /* Delete Main task */
 	vTaskDelete(NULL);
 }
+void ScanTask(void *pvParameters) {
+    uart_event_t event;
 
+    char *pcTaskName;
+      TickType_t xLastWakeTime;
+      const TickType_t xDelay1000ms = pdMS_TO_TICKS(1000UL);
+      volatile uint32_t ul;
+
+      pcTaskName = (char *)pvParameters;
+      xLastWakeTime = xTaskGetTickCount();
+	string mes;
+      for(;;){
+              DISPLAY ("Start of Scan") ;
+               vTaskDelayUntil(&xLastWakeTime, xDelay1000ms);
+               COMPUTE_IN_TICK (2) ;
+           DISPLAY ("Task Scan: scan ") ;
+
+		   if(xQueueReceive(uart_queue, (void * )&event, (portTickType)portMAX_DELAY)) {
+			
+            uart_read_bytes(channel, data, event.size, portMAX_DELAY);
+			sprintf(mes,"%s mv\n",data);
+			uart_write_bytes(UART_PORT_NUM, (const char *) mes, strlen(mes));
+         	
+		   }
+
+            }
+
+}
 void vUpdateLedTask(void *pvParameters) {
 
     uart_event_t event;
