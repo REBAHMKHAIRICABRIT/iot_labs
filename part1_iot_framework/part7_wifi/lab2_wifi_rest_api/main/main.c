@@ -56,6 +56,10 @@ static const uint32_t CONNECTED_WIFI_PRIORITY = 5;
 typedef struct {
   float latitude;
   float longitude;
+  float temp;
+  float feels_like;
+  float temp_min;
+  float temp_max;
   char description[WEATHERMAPINFO_DESCRIPTION_LENGTH];
 
 } weathermapinfo_t;
@@ -80,7 +84,11 @@ void extractJSONWeatherMapInformation(char *resp, weathermapinfo_t *weathermapin
 
     /* Set information in the structure */
     weathermapinfo->latitude = latitude->valuedouble;
-    weathermapinfo->longitude = longitude->valuedouble;    
+    weathermapinfo->longitude = longitude->valuedouble;   
+    weathermapinfo->temp = temp->valuedouble; 
+    weathermapinfo->feels_like = feels_like->valuedouble;   
+    weathermapinfo->temp_min = temp_min->valuedouble;   
+    weathermapinfo->temp_max = temp_max->valuedouble;       
 
     /* Free memory */
     cJSON_Delete(payload);
@@ -92,7 +100,7 @@ void MyApplication(){
   http_param_t param;
   fetchHttpData(&param,"http://api.openweathermap.org/data/2.5/weather?q=Cannes&appid=bfaf90865d45e39c390da17ffa61e195");
   extractJSONWeatherMapInformation(param.buffer, &weathermapinfo);
-  printf("INFO : %f\n", weathermapinfo.latitude);
+  printf("Températures : %f\n%f\n%f\n%f\n", weathermapinfo.temp, weathermapinfo.feels_like, weathermapinfo.temp_min, weathermapinfo.temp_max);
 }
 void app_main() {
   /* ERROR, WARNING, INFO level log */
