@@ -35,10 +35,10 @@
 #include "driver/adc.h"
 #include "driver/adc_common.h"
 #include "esp_adc_cal.h"
-
+#include "string.h"
 #include "driver/ledc.h"
 #include "soc/ledc_reg.h"
-
+esp_adc_cal_characteristics_t *adc_chars;
 static const char *TAG = "MAIN"; 
 
 /******************** ADC Declaration **********************/
@@ -176,28 +176,30 @@ void app_main(void) {
 }
 void ScanTask(void *pvParameters) {
     uart_event_t event;
+char mes[100];
 
     char *pcTaskName;
       TickType_t xLastWakeTime;
       const TickType_t xDelay1000ms = pdMS_TO_TICKS(1000UL);
-      volatile uint32_t ul;
-
+    
       pcTaskName = (char *)pvParameters;
       xLastWakeTime = xTaskGetTickCount();
-	string mes;
+	uint16_t measuredValues;
+	int v;
       for(;;){
-              DISPLAY ("Start of Scan") ;
+            DISPLAY ("Start of Scan") ;
                vTaskDelayUntil(&xLastWakeTime, xDelay1000ms);
                COMPUTE_IN_TICK (2) ;
            DISPLAY ("Task Scan: scan ") ;
 
-		   if(xQueueReceive(uart_queue, (void * )&event, (portTickType)portMAX_DELAY)) {
-			
-            uart_read_bytes(channel, data, event.size, portMAX_DELAY);
-			sprintf(mes,"%s mv\n",data);
+		 
+  		v = adc1_get_raw(channel);
+		measuredValues = esp_adc_cal_raw_to_voltage(v, adc_chars);
+			sprintf(mes,"%d \n",measuredValues);
+           printf("Valeur = %d\n",measuredValues);
 			uart_write_bytes(UART_PORT_NUM, (const char *) mes, strlen(mes));
          	
-		   }
+		   
 
             }
 
@@ -233,12 +235,18 @@ void vUpdateLedTask(void *pvParameters) {
                     /* duty cycle according to the color LED */
                     if (strncmp(WHITE_LED_CMD, data, cmp_length) == 0) {
                         
-
+                         for (int i = 0; i < 100; i++) {
+                            ledc_set_duty_and_update(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_1,i,0);
+                            vTaskDelay(pdMS_TO_TICKS(10));
+                        }
 
                     }
                     else if (strncmp(BLUE_LED_CMD, data, cmp_length) == 0) {
                         
-
+                    for (int i = 0; i < 100; i++) {
+                        ledc_set_duty_and_update(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_0,i,0);
+                        vTaskDelay(pdMS_TO_TICKS(10));
+                    }
 
                     }
                     break;

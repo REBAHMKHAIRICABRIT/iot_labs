@@ -1,0 +1,13 @@
+1.1
+1)a esp_event_handler_register():
+Register an event handler to the system event loop (legacy).
+
+Paramètres :
+event_base – the base id of the event to register the handler for
+event_id – the id of the event to register the handler for
+event_handler – the handler function which gets called when the event is dispatched
+event_handler_arg – data, aside from event data, that is passed to the handler when it is called
+
+Retourne :
+
+ESP_OK: Success - ESP_ERR_NO_MEM: Cannot allocate memory for the handler - ESP_ERR_INVALID_ARG: Invalid combination of event base and event id - Others: Fail
