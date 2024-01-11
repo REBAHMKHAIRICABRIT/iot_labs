@@ -31,3 +31,11 @@ bssid = b8:27:eb:f2:0c:d2
 security mode = WPA2-PSK
 STA IP = 10.3.141.217
 Gateway IP = 10.3.141.1
+1.2)
+
+4) fetch : Fetch the HTTP data from an URL
+5) wifi_http_event_handler_cb()
+Paramètres :
+evt – HTTP Client events data
+Retourne :
+esp_err_t ESP_OK if no error else ESP_FAIL

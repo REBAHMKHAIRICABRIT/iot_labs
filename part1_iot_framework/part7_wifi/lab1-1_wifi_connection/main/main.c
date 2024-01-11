@@ -25,29 +25,58 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "esp_netif.h"
+#include "my_helper_fct.h"
 
 #include "wifi_connect.h"
 
 static const char *TAG = "WIFI_LAB";
 
+static const uint32_t STACK_SIZE = 3*1024;
+static const uint32_t CONNECTED_WIFI_PRIORITY = 5;
 
 /**
  * @brief Starting point function
  * 
  */
 
+
+void vTaskConnectedWifi(void *pvParameters);
+
 void app_main() {
   /* ERROR, WARNING, INFO level log */
   esp_log_level_set(TAG, ESP_LOG_INFO);
   
   /* Init WiFi */
+	wifiInit();
 
+	vTaskSuspendAll();
 
   /* Create connected WiFi Task, STACK=3*1024, Priority=5 */
+	xTaskCreatePinnedToCore(vTaskConnectedWifi, "Connected Wifi", STACK_SIZE, (void *)"Connected Wifi", CONNECTED_WIFI_PRIORITY, NULL, CORE_0);
 
+	xTaskResumeAll();
 
   /* Delete task */
   vTaskDelete(NULL);
 }
 
+void vTaskConnectedWifi(void *pvParameters){
 
+	for(;;){
+		if(xSemaphoreTake(getConnectionWifiSemaphore(), pdMS_TO_TICKS(10000)) == pdTRUE){
+			DISPLAY("Connected on %s", WIFI_SSID);
+			DISPLAY("Run Application");
+			if(xSemaphoreTake(getConnectionWifiSemaphore(), portMAX_DELAY) == pdTRUE){
+				DISPLAY("Retried connection on %s", WIFI_SSID);
+			}
+		}
+		else{
+			DISPLAY("Failed to connect. Retry in");
+			for(int i = 1 ; i <= 5; ){
+				DISPLAY("... %d", i);
+				vTaskDelay(pdMS_TO_TICKS(1000));
+			}
+			esp_restart();
+		}
+	}
+}
