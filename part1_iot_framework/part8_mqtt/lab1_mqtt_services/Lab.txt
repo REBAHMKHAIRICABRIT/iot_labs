@@ -1,0 +1,67 @@
+1.1
+1)a) esp_event_handler_register() :
+Register an event handler to the system event loop (legacy).
+
+Paramètres :
+event_base – the base id of the event to register the handler for
+event_id – the id of the event to register the handler for
+event_handler – the handler function which gets called when the event is dispatched
+event_handler_arg – data, aside from event data, that is passed to the handler when it is called
+
+Retourne :
+
+ESP_OK: Success - ESP_ERR_NO_MEM: Cannot allocate memory for the handler - ESP_ERR_INVALID_ARG: Invalid combination of event base and event id - Others: Fail
+
+b) esp_wifi_set_config() :
+esp_err_t esp_wifi_set_config(wifi_interface_t interface, wifi_config_t *conf)
+Set the configuration of the ESP32 STA or AP
+
+Attention :
+
+This API can be called only when specified interface is enabled, otherwise, API fail
+For station configuration, bssid_set needs to be 0; and it needs to be 1 only when users need to check the MAC address of the AP.
+ESP32 is limited to only one channel, so when in the soft-AP+station mode, the soft-AP will adjust its channel automatically to be the same as the channel of the ESP32 station.
+Paramètres :
+interface – interface
+conf – station or soft-AP configuration
+
+6)
+ssid = raspi-box-esp32
+bssid = b8:27:eb:f2:0c:d2
+security mode = WPA2-PSK
+STA IP = 10.3.141.217
+Gateway IP = 10.3.141.1
+1.2)
+
+4) fetch : Fetch the HTTP data from an URL
+5) wifi_http_event_handler_cb()
+Paramètres :
+evt – HTTP Client events data
+Retourne :
+esp_err_t ESP_OK if no error else ESP_FAIL
+
+1.3) mqt start 
+MQTT start function
+
+Paramètres :
+url – broker address (example: "mqtt://10.3.141.1:1883")
+
+Retourne :
+esp_mqtt_client_handle_t reference to the client handler created
+
+b) Sets mqtt connection URI. This API is usually used to overrides the URI
+ * configured in esp_mqtt_client_init
+
+ c) Registers mqtt event
+
+Paramètres :
+client – mqtt client handle
+event – event type
+event_handler – handler callback
+event_handler_arg – handlers context
+
+Retourne :
+ESP_ERR_NO_MEM if failed to allocate ESP_OK on success
+
+2) adresse mosqutto  ifconfig | grep inet
+        inet 134.59.213.29
