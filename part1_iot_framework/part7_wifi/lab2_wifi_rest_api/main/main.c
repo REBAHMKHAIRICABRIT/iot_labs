@@ -38,7 +38,7 @@ static const char *TAG = "WIFI_LAB";
 
 /* openweathermap API URL for Cannes city, Unit = degree */
 const char *CITY = "Cannes";
-const char *OPEN_WEATHER_MAP_URL = "http://api.openweathermap.org/data/2.5/weather?q=Cannes&appid=bfaf90865d45e39c390da17ffa61e195";
+const char *OPEN_WEATHER_MAP_URL = "http://api.openweathermap.org/data/2.5/weather?q=Cannes&appid=bfaf90865d45e39c390da17ffa61e195&units=metric";
 
 
 
@@ -76,10 +76,12 @@ void extractJSONWeatherMapInformation(char *resp, weathermapinfo_t *weathermapin
     cJSON *coord = cJSON_GetObjectItem(payload, "coord");   
     cJSON *longitude = cJSON_GetObjectItem(coord, "lon");
     cJSON *latitude = cJSON_GetObjectItem(coord, "lat");
-    cJSON *temp = cJSON_GetObjectItem(temp, "temp");
-    cJSON *feels_like = cJSON_GetObjectItem(feels_like, "feels_like");
-    cJSON *temp_min = cJSON_GetObjectItem(temp_min, "temp_min");
-    cJSON *temp_max = cJSON_GetObjectItem(temp_max, "temp_max");
+    cJSON *maini = cJSON_GetObjectItem(payload, "main"); 
+    cJSON *temp = cJSON_GetObjectItem(maini, "temp");
+    cJSON *feels_like = cJSON_GetObjectItem(maini, "feels_like");
+    cJSON *temp_min = cJSON_GetObjectItem(maini, "temp_min");
+    cJSON *temp_max = cJSON_GetObjectItem(maini, "temp_max");
+    cJSON *description = cJSON_GetObjectItem(cJSON_GetObjectItem(payload, "weather")->child, "description");
 
 
     /* Set information in the structure */
@@ -88,7 +90,9 @@ void extractJSONWeatherMapInformation(char *resp, weathermapinfo_t *weathermapin
     weathermapinfo->temp = temp->valuedouble; 
     weathermapinfo->feels_like = feels_like->valuedouble;   
     weathermapinfo->temp_min = temp_min->valuedouble;   
-    weathermapinfo->temp_max = temp_max->valuedouble;       
+    weathermapinfo->temp_max = temp_max->valuedouble;  
+    strcpy(weathermapinfo->description, description->valuestring);
+       
 
     /* Free memory */
     cJSON_Delete(payload);
@@ -100,7 +104,7 @@ void MyApplication(){
   http_param_t param;
   fetchHttpData(&param,"http://api.openweathermap.org/data/2.5/weather?q=Cannes&appid=bfaf90865d45e39c390da17ffa61e195");
   extractJSONWeatherMapInformation(param.buffer, &weathermapinfo);
-  printf("Températures : %f\n%f\n%f\n%f\n", weathermapinfo.temp, weathermapinfo.feels_like, weathermapinfo.temp_min, weathermapinfo.temp_max);
+  printf("Températures : %f°C\n%f°C\n%f°C\n%f°C\n\nDescription : %s", weathermapinfo.temp, weathermapinfo.feels_like, weathermapinfo.temp_min, weathermapinfo.temp_max, weathermapinfo.description);
 }
 void app_main() {
   /* ERROR, WARNING, INFO level log */
